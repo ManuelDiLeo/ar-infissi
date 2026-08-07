@@ -7,6 +7,7 @@ const logoPath = `${assetBasePath}img/loghi/VETTLOGO.svg`;
 const preloadLogoPath = `${assetBasePath}img/loghi/VETTLOGO.svg`;
 let stopHomeSmoothScroll = () => {};
 let canStartHomeHorizontalScroll = () => true;
+let moveHomeToAdjacentSlide = () => false;
 let isHomeSmoothScrollSetup = false;
 const isLikelyTrackpad = (event) => event.deltaMode === 0 && Math.abs(event.deltaY) < 65;
 
@@ -337,6 +338,7 @@ const setupSmoothHomeScroll = () => {
   let targetSlide = null;
   let transitionFrame = null;
   let settledFrames = 0;
+  let queuedAdjacentDirection = 0;
 
   const clearWheelIntent = () => {
     wheelIntentCount = 0;
@@ -354,6 +356,12 @@ const setupSmoothHomeScroll = () => {
     targetSlide = null;
     settledFrames = 0;
     isAnimating = false;
+
+    if (queuedAdjacentDirection) {
+      const direction = queuedAdjacentDirection;
+      queuedAdjacentDirection = 0;
+      window.requestAnimationFrame(() => moveHomeToAdjacentSlide(direction));
+    }
   };
 
   const monitorTransition = () => {
@@ -367,6 +375,29 @@ const setupSmoothHomeScroll = () => {
     }
 
     transitionFrame = window.requestAnimationFrame(monitorTransition);
+  };
+
+  moveHomeToAdjacentSlide = (direction) => {
+    if (isAnimating) {
+      queuedAdjacentDirection = direction;
+      return true;
+    }
+
+    const activeSlide = getHomeSlideAtViewportCenter();
+    const adjacentSlide = activeSlide ? getAdjacentHomeSlide(activeSlide, direction) : null;
+    if (!adjacentSlide) {
+      return false;
+    }
+
+    clearWheelIntent();
+    lastWheelInputAt = performance.now();
+    isAnimating = true;
+    awaitingGestureRelease = true;
+    targetSlide = adjacentSlide;
+    settledFrames = 0;
+    adjacentSlide.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+    transitionFrame = window.requestAnimationFrame(monitorTransition);
+    return true;
   };
 
   canStartHomeHorizontalScroll = () => {
@@ -725,6 +756,7 @@ const setupSmoothHorizontalWheel = ({
   activationElement = scroller,
   activationCheck,
   onUpdate,
+  onBoundary,
   duration = 550,
   gestureReleaseGap = 120,
   continuous = false
@@ -740,6 +772,8 @@ const setupSmoothHorizontalWheel = ({
   let awaitingGestureRelease = false;
   let animationFrame = null;
   let lastWheelInputAt = -Infinity;
+  let continuousTargetScroll = scroller.scrollLeft;
+  let continuousBoundaryDirection = 0;
 
   const getMaxScroll = () => Math.max(0, scroller.scrollWidth - scroller.clientWidth);
   const clampScroll = (value, maxScroll = getMaxScroll()) => Math.max(0, Math.min(maxScroll, value));
@@ -781,6 +815,32 @@ const setupSmoothHorizontalWheel = ({
       ? index
       : nearestIndex
   ), 0);
+
+  const animateContinuousScroll = () => {
+    const distance = continuousTargetScroll - scroller.scrollLeft;
+
+    if (Math.abs(distance) > 0.45) {
+      scroller.scrollLeft += distance * 0.16;
+      onUpdate?.();
+      animationFrame = window.requestAnimationFrame(animateContinuousScroll);
+      return;
+    }
+
+    scroller.scrollLeft = continuousTargetScroll;
+    currentIndex = getNearestPageIndex();
+    animationFrame = null;
+    onUpdate?.();
+
+    if (continuousBoundaryDirection) {
+      const direction = continuousBoundaryDirection;
+      continuousBoundaryDirection = 0;
+      if (onBoundary) {
+        onBoundary(direction);
+      } else {
+        moveHomeToAdjacentSlide(direction);
+      }
+    }
+  };
 
   const animateToPage = (direction) => {
     calculatePageTargets();
@@ -859,19 +919,34 @@ const setupSmoothHorizontalWheel = ({
           : event.deltaMode === 2
             ? event.deltaY * scroller.clientWidth
             : event.deltaY;
-        const wheelDistance = normalizedWheelDistance * (isLikelyTrackpad(event) ? 1.35 : 2.2);
-        const requestedScrollLeft = scroller.scrollLeft + wheelDistance;
+        const wheelDistance = normalizedWheelDistance * (isLikelyTrackpad(event) ? 0.45 : 0.65);
+        const requestedScrollLeft = continuousTargetScroll + wheelDistance;
         const nextScrollLeft = clampScroll(requestedScrollLeft, maxScroll);
         const isCrossingBoundary = requestedScrollLeft < 0 || requestedScrollLeft > maxScroll;
 
-        if (nextScrollLeft !== scroller.scrollLeft) {
-          if (!isCrossingBoundary) {
-            event.preventDefault();
-          }
+        if (nextScrollLeft !== continuousTargetScroll) {
+          event.preventDefault();
           stopHomeSmoothScroll();
-          scroller.scrollLeft = nextScrollLeft;
-          currentIndex = getNearestPageIndex();
-          onUpdate?.();
+          continuousTargetScroll = nextScrollLeft;
+          continuousBoundaryDirection = 0;
+          if (!animationFrame) {
+            animationFrame = window.requestAnimationFrame(animateContinuousScroll);
+          }
+          if (isCrossingBoundary) {
+            if (onBoundary) {
+              onBoundary(direction);
+            } else {
+              moveHomeToAdjacentSlide(direction);
+            }
+          }
+        } else if (isCrossingBoundary) {
+          event.preventDefault();
+          continuousBoundaryDirection = 0;
+          if (onBoundary) {
+            onBoundary(direction);
+          } else {
+            moveHomeToAdjacentSlide(direction);
+          }
         }
         return;
       }
@@ -904,6 +979,9 @@ const setupSmoothHorizontalWheel = ({
     () => {
       if (!isAnimating) {
         currentIndex = getNearestPageIndex();
+        if (!animationFrame) {
+          continuousTargetScroll = scroller.scrollLeft;
+        }
       }
       onUpdate?.();
     },
@@ -920,6 +998,8 @@ const setupSmoothHorizontalWheel = ({
     calculatePageTargets();
     currentIndex = getNearestPageIndex();
     scroller.scrollLeft = pageTargets[currentIndex];
+    continuousTargetScroll = scroller.scrollLeft;
+    continuousBoundaryDirection = 0;
     onUpdate?.();
   });
 
@@ -1276,6 +1356,22 @@ if (homeProductStrip) {
     activationElement: homeProductSlide,
     activationCheck: isHomeProductHorizontalReady,
     onUpdate: updateHomeProductMotion,
+    onBoundary: (direction) => {
+      const destination = direction > 0
+        ? homeProductSlide?.nextElementSibling
+        : homeProductSlide?.previousElementSibling;
+
+      if (!destination?.matches("[data-home-slide]")) {
+        return;
+      }
+
+      stopHomeSmoothScroll();
+      const destinationTop = window.scrollY + destination.getBoundingClientRect().top;
+      window.scrollTo({
+        top: destinationTop,
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      });
+    },
     duration: 550,
     gestureReleaseGap: 120,
     continuous: true
