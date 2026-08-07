@@ -1,0 +1,14 @@
+MODELLO: ACCESSORI_SICUREZZA
+PAGINA PDF: 156
+
+TESTO PDF:
+accessori
+Puntali
+Copricilindri
+Fermo imposta
+Maniglia standard
+Maniglia ribassata
+Serratura BUNKER
+Maniglia TAVELLINO
+Serratura ISEO bascula
+Maniglia ULTRARIBASSATA

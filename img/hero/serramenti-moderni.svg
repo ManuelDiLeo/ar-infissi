@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Placeholder casa moderna con serramenti">
+  <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#111111"/><stop offset="1" stop-color="#c89b5c"/></linearGradient></defs>
+  <rect width="1600" height="900" fill="url(#g)"/>
+  <rect x="780" y="170" width="520" height="520" fill="#f5f5f5" opacity=".95"/>
+  <rect x="835" y="225" width="185" height="405" fill="#1c1c1c"/>
+  <rect x="1060" y="225" width="185" height="405" fill="#1c1c1c"/>
+  <line x1="928" y1="225" x2="928" y2="630" stroke="#c89b5c" stroke-width="10"/>
+  <line x1="1152" y1="225" x2="1152" y2="630" stroke="#c89b5c" stroke-width="10"/>
+  <path d="M210 670h1100" stroke="#ffffff" stroke-width="18" opacity=".42"/>
+  <text x="160" y="250" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="82" font-weight="700">AR INFISSI</text>
+  <text x="160" y="330" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="36">Placeholder hero - sostituire con foto reale</text>
+</svg>

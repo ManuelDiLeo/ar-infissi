@@ -1,0 +1,9 @@
+MODELLO: COVERAL
+PAGINA PDF: 126
+
+TESTO PDF:
+Coveral
+PVC-alluminio
+ 
+profilo:PVC[Kidea,KideaFit, Kalea, Manya e Sympla] 
+protezione esterna: alluminio

@@ -1,0 +1,1 @@
+Archivio creato dal PDF AR Infissi. I file info.txt riportano il testo estratto dalle pagine PDF, senza contenuti inventati. Le immagini sono estratte dalle immagini incorporate nel PDF quando disponibili; per pagine tecniche/colori è stato salvato il render della pagina.

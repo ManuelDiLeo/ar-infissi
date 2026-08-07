@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Catalogo prodotti AR Infissi e Serramenti: finestre, porte interne, blindate, zanzariere, persiane, avvolgibili e inferriate.">
+  <title>Prodotti | AR Infissi e Serramenti</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="products-page">
+  <header class="site-header">
+    <a class="brand" href="index.html"><span>AR</span> Infissi</a>
+    <button class="menu-toggle" type="button" aria-label="Apri menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    <nav class="main-nav" aria-label="Menu principale">
+      <a href="index.html">Home</a>
+      <a href="prodotti.html">Prodotti</a>
+      <a href="realizzazioni.html">Realizzazioni</a>
+      <a href="preventivo.html">Preventivo</a>
+      <a href="chi-siamo.html">Chi siamo</a>
+      <a href="contatti.html">Contatti</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="page-hero product-page-hero">
+      <p class="eyebrow">Catalogo</p>
+      <h1>PRODOTTI PER OGNI VOSTRA ESIGENZA</h1>
+      <p>Scegli una categoria dalla casa interattiva o dalle card: ogni apertura porta al catalogo corretto.</p>
+    </section>
+
+    <section class="section product-house-section">
+      <div class="section-head reveal">
+        <p class="eyebrow">Casa interattiva</p>
+        <h2>Seleziona il prodotto direttamente sull'abitazione</h2>
+        <p>Passa sopra un elemento della casa e clicca per aprire il catalogo dedicato.</p>
+      </div>
+
+      <div class="product-house-layout">
+        <div class="product-house-stage reveal" aria-label="Casa interattiva per selezionare i prodotti">
+          <img class="product-house-render" src="img/prodotti/casa-3d-prodotti.png" alt="Casa 3D realistica con prodotti selezionabili">
+
+          <a class="product-house-hotspot house-window-main" href="prodotti/finestre/" data-transition="window" data-title="Finestre">
+            <span>Finestre</span>
+          </a>
+          <a class="product-house-hotspot house-door-main" href="prodotti/porte-blindate.html" data-transition="heavy-door" data-title="Porte blindate">
+            <span>Porte blindate</span>
+          </a>
+          <a class="product-house-hotspot house-door-interior" href="prodotti/porte/" data-transition="interior-door" data-title="Porte interne">
+            <span>Porte interne</span>
+          </a>
+          <a class="product-house-hotspot house-screen" href="prodotti/zanzariere/" data-transition="screen" data-title="Zanzariere">
+            <span>Zanzariere</span>
+          </a>
+          <a class="product-house-hotspot house-shutters" href="prodotti/persiane/" data-transition="shutters" data-title="Persiane">
+            <span>Persiane</span>
+          </a>
+          <a class="product-house-hotspot house-roller" href="prodotti/avvolgibili/" data-transition="roller" data-title="Avvolgibili / Tapparelle">
+            <span>Avvolgibili</span>
+          </a>
+          <a class="product-house-hotspot house-grate" href="prodotti/inferriate/" data-transition="grate" data-title="Inferriate">
+            <span>Inferriate</span>
+          </a>
+          <button class="house-fullscreen-trigger" type="button" aria-label="Apri la casa interattiva a schermo intero" aria-haspopup="dialog">
+            <span aria-hidden="true">⤢</span>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="section product-showcase-section">
+      <div class="section-head reveal">
+        <p class="eyebrow">Categorie</p>
+        <h2>Cataloghi visivi AR Infissi</h2>
+      </div>
+
+      <div class="product-showcase-grid">
+        <article class="animated-product-card reveal" data-transition="window" data-href="prodotti/finestre/">
+          <img src="img/hero/casa-vetri-toscana.png" alt="Finestre moderne su casa toscana">
+          <div class="animated-product-content">
+            <span>01</span>
+            <h2>Finestre</h2>
+            <p>Infissi e finestre per isolamento, luce naturale e comfort abitativo.</p>
+            <button class="btn btn-accent" type="button">Apri catalogo</button>
+          </div>
+          <div class="card-effect card-effect-window" aria-hidden="true"><i></i><i></i></div>
+        </article>
+
+        <article class="animated-product-card reveal" data-transition="interior-door" data-href="prodotti/porte/">
+          <img src="img/catalogo/porte/OPERA_211QI.jpg" alt="Porta interna moderna">
+          <div class="animated-product-content">
+            <span>02</span>
+            <h2>Porte interne</h2>
+            <p>Linee e sottomodelli numerati con foto reali da catalogo.</p>
+            <button class="btn btn-accent" type="button">Apri catalogo</button>
+          </div>
+          <div class="card-effect card-effect-door" aria-hidden="true"><i></i></div>
+        </article>
+
+        <article class="animated-product-card reveal" data-transition="heavy-door" data-href="prodotti/porte-blindate.html">
+          <img src="img/prodotti/card-porte-blindate.png" alt="Porta blindata moderna">
+          <div class="animated-product-content">
+            <span>03</span>
+            <h2>Porte blindate</h2>
+            <p>Ingressi sicuri, isolanti e personalizzabili per abitazioni e uffici.</p>
+            <button class="btn btn-accent" type="button">Apri catalogo</button>
+          </div>
+          <div class="card-effect card-effect-heavy" aria-hidden="true"><i></i></div>
+        </article>
+
+        <article class="animated-product-card reveal" data-transition="screen" data-href="prodotti/zanzariere/">
+          <img src="img/prodotti/card-zanzariere.png" alt="Zanzariera su finestra">
+          <div class="animated-product-content">
+            <span>04</span>
+            <h2>Zanzariere</h2>
+            <p>Soluzioni su misura per finestre, porte finestre e grandi aperture.</p>
+            <button class="btn btn-accent" type="button">Apri catalogo</button>
+          </div>
+          <div class="card-effect card-effect-screen" aria-hidden="true"><i></i></div>
+        </article>
+
+        <article class="animated-product-card reveal" data-transition="shutters" data-href="prodotti/persiane/">
+          <img src="img/prodotti/card-persiane.png" alt="Persiane su facciata toscana">
+          <div class="animated-product-content">
+            <span>05</span>
+            <h2>Persiane</h2>
+            <p>Protezione, ombra e stile con ante tradizionali o moderne.</p>
+            <button class="btn btn-accent" type="button">Apri catalogo</button>
+          </div>
+          <div class="card-effect card-effect-shutters" aria-hidden="true"><i></i><i></i></div>
+        </article>
+
+        <article class="animated-product-card reveal" data-transition="roller" data-href="prodotti/avvolgibili/">
+          <img src="img/prodotti/card-avvolgibili.png" alt="Avvolgibile moderno">
+          <div class="animated-product-content">
+            <span>06</span>
+            <h2>Avvolgibili / Tapparelle</h2>
+            <p>Comfort, privacy e protezione con sistemi manuali o motorizzati.</p>
+            <button class="btn btn-accent" type="button">Apri catalogo</button>
+          </div>
+          <div class="card-effect card-effect-roller" aria-hidden="true"><i></i></div>
+        </article>
+
+        <article class="animated-product-card reveal" data-transition="grate" data-href="prodotti/inferriate/">
+          <img src="img/prodotti/card-inferriate.png" alt="Inferriata elegante su finestra">
+          <div class="animated-product-content">
+            <span>07</span>
+            <h2>Inferriate</h2>
+            <p>Sicurezza per abitazioni e attivit&agrave;, con soluzioni fisse o apribili.</p>
+            <button class="btn btn-accent" type="button">Apri catalogo</button>
+          </div>
+          <div class="card-effect card-effect-grate" aria-hidden="true"><i></i></div>
+        </article>
+
+        <article class="animated-product-card reveal" data-transition="window" data-href="prodotti/finestre/">
+          <img src="img/hero/casa-vetri-toscana.png" alt="Finestre panoramiche moderne">
+          <div class="animated-product-content">
+            <span>08</span>
+            <h2>Finestre panoramiche</h2>
+            <p>Soluzioni luminose per grandi aperture, isolamento e comfort abitativo.</p>
+            <button class="btn btn-accent" type="button">Apri catalogo</button>
+          </div>
+          <div class="card-effect card-effect-window" aria-hidden="true"><i></i><i></i></div>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer products-page-footer">
+    <div><h2><span>AR</span> Infissi e Serramenti</h2><p>Via 2 Giugno 60A, Certaldo</p><p>Tel. 000 0000000 · info@example.com</p></div>
+    <div><h3>Link rapidi</h3><a href="prodotti.html">Prodotti</a><a href="realizzazioni.html">Realizzazioni</a><a href="preventivo.html">Preventivo</a><a href="contatti.html">Contatti</a></div>
+    <div><h3>Prodotti</h3><a href="prodotti/finestre/">Finestre</a><a href="prodotti/porte/">Porte</a><a href="prodotti/zanzariere/">Zanzariere</a></div>
+    <div class="products-page-footer-details">
+      <h2><span>AR</span> Infissi e Serramenti</h2>
+      <p>Via 2 Giugno 60A, Certaldo (FI)</p>
+      <p>Tel. +39 338 932 8320</p>
+      <p>arinfissitoscana@gmail.com</p>
+    </div>
+    <p class="copyright">&copy; 2026 AR Infissi e Serramenti. Tutti i diritti riservati.</p>
+  </footer>
+  <a class="whatsapp-float" href="https://wa.me/390000000000" aria-label="Scrivi su WhatsApp">WA</a>
+  <script src="js/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+MODELLO: ELITE_PHILO_PLUS
+PAGINA PDF: 123
+
+TESTO PDF:
+Elite  Philo
++
+[abete, pino, okumé, larice e rovere]

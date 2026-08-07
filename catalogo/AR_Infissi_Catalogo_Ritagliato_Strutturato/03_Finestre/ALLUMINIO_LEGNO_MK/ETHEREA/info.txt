@@ -1,0 +1,11 @@
+MODELLO: ETHEREA
+PAGINA PDF: 109
+
+TESTO PDF:
+Etherea
+legno-alluminio
+profilo esterno:alluminio
+profilo portanteinterno:legno [abete, pino, okumé,
+lariceerovere]
+incollaggio strutturale
+14

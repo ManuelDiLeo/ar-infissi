@@ -1,0 +1,7 @@
+MODELLO: ELITE_LEGNO
+PAGINA PDF: 115
+
+TESTO PDF:
+Elite LEGNO
+legno
+[abete,pino,okumé, larice e rovere]

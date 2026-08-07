@@ -1,0 +1,9 @@
+MODELLO: LEMIX_PHILO
+PAGINA PDF: 113
+
+TESTO PDF:
+Lemix Philo
+legno-alluminio
+ 
+profilo esterno: alluminio
+profilo portante interno: legno [abete e rovere]

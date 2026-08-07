@@ -1,0 +1,10 @@
+MODELLO: TERMALMIX_CLASSIC
+PAGINA PDF: 108
+
+TESTO PDF:
+Termalmix Classic
+ALLUMINIO-LEGNO
+profilo portante esterno:alluminio
+profilo separatore:poliammide
+profilo interno:
+legno[massellodifrassinoecarpino]

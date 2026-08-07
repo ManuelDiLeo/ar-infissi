@@ -1,0 +1,7 @@
+MODELLO: ELITE_PHILO
+PAGINA PDF: 117
+
+TESTO PDF:
+Elite Philo
+legno
+[abete, pino, okumé, larice e rovere]

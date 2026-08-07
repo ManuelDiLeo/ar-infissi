@@ -1,0 +1,9 @@
+MODELLO: LEMIX
+PAGINA PDF: 111
+
+TESTO PDF:
+Lemix
+legno-alluminio
+ 
+profilo esterno: alluminio
+profiloportanteinterno: legno [abete e rovere]

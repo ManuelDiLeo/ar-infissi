@@ -1,0 +1,9 @@
+MODELLO: TERMALMIX
+PAGINA PDF: 104
+
+TESTO PDF:
+Termalmix
+ALLUMINIO- ABS -LEGNO
+profilo portante esterno:alluminio
+profilo separatore:ABS
+profilo interno: legno[massello di frassino e carpino]
