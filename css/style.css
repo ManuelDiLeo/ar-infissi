@@ -9539,7 +9539,7 @@ body.is-trackpad-scroll .home-document {
     position: relative;
     inset: auto;
     align-items: stretch;
-    gap: 14px;
+    gap: 12px;
     height: auto;
     min-height: 0;
     padding: 0 16px 16px;
@@ -9548,12 +9548,17 @@ body.is-trackpad-scroll .home-document {
     overscroll-behavior-x: contain;
     touch-action: pan-x pan-y pinch-zoom;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .home-slide-products .home-product-strip::-webkit-scrollbar {
+    display: none;
   }
 
   .home-product-strip a,
   .home-product-strip a:nth-child(n) {
-    flex: 0 0 min(72vw, 280px);
-    max-width: calc(100vw - 48px);
+    flex: 0 0 min(52vw, 205px);
+    max-width: 205px;
     margin-top: 0;
     border: 1px solid rgba(17, 17, 17, 0.1);
     border-radius: 14px;
@@ -9566,7 +9571,7 @@ body.is-trackpad-scroll .home-document {
   .home-product-strip img,
   .home-slide-products .home-product-strip img {
     width: 100%;
-    height: min(54vw, 220px);
+    height: min(39vw, 155px);
     object-fit: cover;
   }
 
@@ -9580,9 +9585,12 @@ body.is-trackpad-scroll .home-document {
   .home-slide-products .home-product-strip + .btn {
     position: relative;
     left: auto;
+    right: auto;
     bottom: auto;
-    width: calc(100% - 32px);
-    margin: 4px 16px 0;
+    width: fit-content;
+    max-width: calc(100% - 32px);
+    margin: 6px auto 0;
+    white-space: nowrap;
   }
 
   .home-slide-works {
@@ -9748,5 +9756,83 @@ body.is-trackpad-scroll .home-document {
   .home-work-strip button,
   .home-slide .btn {
     touch-action: manipulation;
+  }
+
+  /* Controllo finale mobile: pannelli contenuti e testi sempre nel flusso. */
+  .home-slide .home-slide-content,
+  .home-slide .home-two-columns,
+  .hero-exclusive-offer,
+  .story-portrait,
+  .home-product-strip,
+  .home-work-carousel,
+  .home-work-slide,
+  .home-work-strip,
+  .home-map-panel,
+  .home-slide-footer.site-footer {
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+
+  .home-slide-story {
+    height: auto;
+    min-height: 0;
+    padding: calc(var(--header-height) + 24px) 16px 28px;
+    overflow: hidden;
+  }
+
+  .home-slide-story .home-slide-content,
+  .home-slide-story .home-two-columns {
+    position: relative;
+    inset: auto;
+    display: grid;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    align-items: start;
+    overflow: visible;
+  }
+
+  .home-slide-story .home-two-columns > div:first-child,
+  .home-slide-story .company-story-text {
+    position: relative;
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-height: 0;
+  }
+
+  .home-slide-story .home-slide-content h2 {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 18px;
+    font-size: clamp(1.9rem, 9vw, 2.45rem);
+    line-height: 1.04;
+    overflow-wrap: anywhere;
+  }
+
+  .home-slide-story .made-italy-story {
+    position: relative;
+    inset: auto;
+    margin: 0 0 14px;
+  }
+
+  .home-slide-story .company-story-text p {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 12px;
+    overflow-wrap: break-word;
+  }
+
+  .home-slide-story .story-portrait {
+    justify-self: stretch;
+    transform: none;
+  }
+
+  .home-slide-story .story-signature {
+    filter: brightness(0) invert(1) drop-shadow(0 5px 14px rgba(0, 0, 0, 0.52));
   }
 }

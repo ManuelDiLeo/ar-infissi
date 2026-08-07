@@ -319,7 +319,9 @@ const isHomeProductHorizontalReady = (element) => (
 );
 
 const setupSmoothHomeScroll = () => {
-  if (!isHomePage) {
+  const desktopHomeLayout = window.matchMedia("(min-width: 861px)");
+
+  if (!isHomePage || !desktopHomeLayout.matches) {
     return;
   }
 
@@ -329,8 +331,8 @@ const setupSmoothHomeScroll = () => {
 
   isHomeSmoothScrollSetup = true;
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const gestureReleaseGap = 120;
-  let wheelIntentCount = 0;
+  const gestureReleaseGap = 42;
+  let wheelIntentDistance = 0;
   let wheelIntentDirection = 0;
   let lastWheelInputAt = -Infinity;
   let isAnimating = false;
@@ -341,7 +343,7 @@ const setupSmoothHomeScroll = () => {
   let queuedAdjacentDirection = 0;
 
   const clearWheelIntent = () => {
-    wheelIntentCount = 0;
+    wheelIntentDistance = 0;
     wheelIntentDirection = 0;
   };
 
@@ -458,18 +460,20 @@ const setupSmoothHomeScroll = () => {
         awaitingGestureRelease = false;
       }
 
-      if (timeSinceLastWheelInput < gestureReleaseGap) {
-        return;
-      }
-
       if (intentDirection !== wheelIntentDirection) {
         clearWheelIntent();
         wheelIntentDirection = intentDirection;
       }
 
-      wheelIntentCount += 1;
+      const normalizedDistance = event.deltaMode === 1
+        ? Math.abs(event.deltaY) * 16
+        : event.deltaMode === 2
+          ? Math.abs(event.deltaY) * window.innerHeight
+          : Math.abs(event.deltaY);
+      const intentThreshold = isLikelyTrackpad(event) ? 9 : 28;
+      wheelIntentDistance += normalizedDistance;
 
-      if (wheelIntentCount < 2) {
+      if (wheelIntentDistance < intentThreshold) {
         return;
       }
 
@@ -1334,6 +1338,7 @@ const homeProductStrip = document.querySelector(".home-slide-products .home-prod
 if (homeProductStrip) {
   const homeProductSlide = homeProductStrip.closest(".home-slide-products");
   const homeProductFluidCanvas = setupHomeProductFluidCanvas(homeProductSlide);
+  const desktopHomeLayout = window.matchMedia("(min-width: 861px)");
 
   const updateHomeProductMotion = () => {
     const maxScroll = homeProductStrip.scrollWidth - homeProductStrip.clientWidth;
@@ -1350,32 +1355,34 @@ if (homeProductStrip) {
     homeProductFluidCanvas.setProgress(progress);
   };
 
-  setupSmoothHorizontalWheel({
-    scroller: homeProductStrip,
-    wheelTarget: window,
-    activationElement: homeProductSlide,
-    activationCheck: isHomeProductHorizontalReady,
-    onUpdate: updateHomeProductMotion,
-    onBoundary: (direction) => {
-      const destination = direction > 0
-        ? homeProductSlide?.nextElementSibling
-        : homeProductSlide?.previousElementSibling;
+  if (desktopHomeLayout.matches) {
+    setupSmoothHorizontalWheel({
+      scroller: homeProductStrip,
+      wheelTarget: window,
+      activationElement: homeProductSlide,
+      activationCheck: isHomeProductHorizontalReady,
+      onUpdate: updateHomeProductMotion,
+      onBoundary: (direction) => {
+        const destination = direction > 0
+          ? homeProductSlide?.nextElementSibling
+          : homeProductSlide?.previousElementSibling;
 
-      if (!destination?.matches("[data-home-slide]")) {
-        return;
-      }
+        if (!destination?.matches("[data-home-slide]")) {
+          return;
+        }
 
-      stopHomeSmoothScroll();
-      const destinationTop = window.scrollY + destination.getBoundingClientRect().top;
-      window.scrollTo({
-        top: destinationTop,
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-      });
-    },
-    duration: 550,
-    gestureReleaseGap: 120,
-    continuous: true
-  });
+        stopHomeSmoothScroll();
+        const destinationTop = window.scrollY + destination.getBoundingClientRect().top;
+        window.scrollTo({
+          top: destinationTop,
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        });
+      },
+      duration: 550,
+      gestureReleaseGap: 120,
+      continuous: true
+    });
+  }
   updateHomeProductMotion();
 }
 
