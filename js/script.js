@@ -331,7 +331,7 @@ const setupSmoothHomeScroll = () => {
 
   isHomeSmoothScrollSetup = true;
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const gestureReleaseGap = 42;
+  const gestureReleaseGap = 360;
   let wheelIntentDistance = 0;
   let wheelIntentDirection = 0;
   let lastWheelInputAt = -Infinity;
@@ -340,7 +340,7 @@ const setupSmoothHomeScroll = () => {
   let targetSlide = null;
   let transitionFrame = null;
   let settledFrames = 0;
-  let queuedAdjacentDirection = 0;
+  let lastTransitionInvolvedWorks = false;
 
   const clearWheelIntent = () => {
     wheelIntentDistance = 0;
@@ -351,6 +351,7 @@ const setupSmoothHomeScroll = () => {
     clearWheelIntent();
     lastWheelInputAt = -Infinity;
     awaitingGestureRelease = false;
+    lastTransitionInvolvedWorks = false;
   };
 
   const completeTransition = () => {
@@ -358,12 +359,6 @@ const setupSmoothHomeScroll = () => {
     targetSlide = null;
     settledFrames = 0;
     isAnimating = false;
-
-    if (queuedAdjacentDirection) {
-      const direction = queuedAdjacentDirection;
-      queuedAdjacentDirection = 0;
-      window.requestAnimationFrame(() => moveHomeToAdjacentSlide(direction));
-    }
   };
 
   const monitorTransition = () => {
@@ -381,7 +376,6 @@ const setupSmoothHomeScroll = () => {
 
   moveHomeToAdjacentSlide = (direction) => {
     if (isAnimating) {
-      queuedAdjacentDirection = direction;
       return true;
     }
 
@@ -396,6 +390,8 @@ const setupSmoothHomeScroll = () => {
     isAnimating = true;
     awaitingGestureRelease = true;
     targetSlide = adjacentSlide;
+    lastTransitionInvolvedWorks = activeSlide.classList.contains("home-slide-works")
+      || adjacentSlide.classList.contains("home-slide-works");
     settledFrames = 0;
     adjacentSlide.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
     transitionFrame = window.requestAnimationFrame(monitorTransition);
@@ -411,11 +407,13 @@ const setupSmoothHomeScroll = () => {
       return true;
     }
 
-    if (performance.now() - lastWheelInputAt < gestureReleaseGap) {
+    const requiredReleaseGap = lastTransitionInvolvedWorks ? 720 : gestureReleaseGap;
+    if (performance.now() - lastWheelInputAt < requiredReleaseGap) {
       return false;
     }
 
     awaitingGestureRelease = false;
+    lastTransitionInvolvedWorks = false;
     clearWheelIntent();
     return true;
   };
@@ -454,10 +452,16 @@ const setupSmoothHomeScroll = () => {
       event.preventDefault();
 
       if (awaitingGestureRelease) {
-        if (timeSinceLastWheelInput < gestureReleaseGap) {
+        const involvesWorksSlide = lastTransitionInvolvedWorks
+          || activeSlide?.classList.contains("home-slide-works")
+          || targetSlide?.classList.contains("home-slide-works");
+        const requiredReleaseGap = involvesWorksSlide ? 720 : gestureReleaseGap;
+
+        if (timeSinceLastWheelInput < requiredReleaseGap) {
           return;
         }
         awaitingGestureRelease = false;
+        lastTransitionInvolvedWorks = false;
       }
 
       if (intentDirection !== wheelIntentDirection) {
@@ -470,7 +474,10 @@ const setupSmoothHomeScroll = () => {
         : event.deltaMode === 2
           ? Math.abs(event.deltaY) * window.innerHeight
           : Math.abs(event.deltaY);
-      const intentThreshold = isLikelyTrackpad(event) ? 9 : 28;
+      const isWorksSlide = activeSlide?.classList.contains("home-slide-works");
+      const intentThreshold = isWorksSlide
+        ? (isLikelyTrackpad(event) ? 55 : 90)
+        : (isLikelyTrackpad(event) ? 9 : 28);
       wheelIntentDistance += normalizedDistance;
 
       if (wheelIntentDistance < intentThreshold) {
@@ -481,6 +488,8 @@ const setupSmoothHomeScroll = () => {
       isAnimating = true;
       awaitingGestureRelease = true;
       targetSlide = adjacentSlide;
+      lastTransitionInvolvedWorks = activeSlide.classList.contains("home-slide-works")
+        || adjacentSlide.classList.contains("home-slide-works");
       settledFrames = 0;
       adjacentSlide.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
       transitionFrame = window.requestAnimationFrame(monitorTransition);
@@ -554,7 +563,16 @@ document.querySelectorAll(".main-nav a").forEach((link) => {
 if (window.location.pathname.includes("/prodotti/") && !document.querySelector(".product-back-link")) {
   const header = document.querySelector(".site-header");
   if (header) {
-    header.insertAdjacentHTML("afterend", `<a class="product-back-link" href="${assetBasePath}prodotti.html">Indietro ai prodotti</a>`);
+    const isCatalogDetail = Boolean(document.querySelector(".catalog-product-hero"));
+    const isWindowDetail = isCatalogDetail && window.location.pathname.includes("/prodotti/finestre/");
+    const isDoorDetail = isCatalogDetail && window.location.pathname.includes("/prodotti/porte/");
+    const backHref = isWindowDetail
+      ? `${assetBasePath}prodotti/finestre/`
+      : isDoorDetail
+        ? `${assetBasePath}prodotti/porte/`
+        : `${assetBasePath}prodotti.html`;
+    const backLabel = isCatalogDetail ? "Indietro al catalogo" : "Indietro ai prodotti";
+    header.insertAdjacentHTML("afterend", `<a class="product-back-link" href="${backHref}">${backLabel}</a>`);
   }
 }
 
@@ -743,6 +761,50 @@ if (quoteForm?.querySelector("[data-quote-step]")) {
   });
 }
 
+const homeMobileLayout = window.matchMedia("(max-width: 640px)");
+
+const syncHomeMobileEnhancements = () => {
+  const storyText = document.querySelector(".home-slide-story .company-story-text");
+
+  if (!isHomePage || !homeMobileLayout.matches) {
+    document.querySelectorAll(".home-mobile-section-blend").forEach((blend) => blend.remove());
+    document.querySelector(".home-story-mobile-toggle")?.remove();
+    storyText?.classList.remove("is-mobile-collapsed", "is-mobile-expanded");
+    return;
+  }
+
+  document.querySelectorAll("[data-home-slide]").forEach((slide, index) => {
+    if (index === 0 || slide.querySelector(":scope > .home-mobile-section-blend")) return;
+
+    const blend = document.createElement("span");
+    blend.className = "home-mobile-section-blend";
+    blend.setAttribute("aria-hidden", "true");
+    slide.prepend(blend);
+  });
+
+  if (
+    storyText
+    && storyText.querySelectorAll(":scope > p").length > 2
+    && !document.querySelector(".home-story-mobile-toggle")
+  ) {
+    storyText.classList.add("is-mobile-collapsed");
+    const storyToggle = document.createElement("button");
+    storyToggle.className = "home-story-mobile-toggle";
+    storyToggle.type = "button";
+    storyToggle.textContent = "Scopri di più";
+    storyToggle.setAttribute("aria-expanded", "false");
+    storyToggle.addEventListener("click", () => {
+      const isExpanded = storyText.classList.toggle("is-mobile-expanded");
+      storyToggle.textContent = isExpanded ? "Mostra meno" : "Scopri di più";
+      storyToggle.setAttribute("aria-expanded", String(isExpanded));
+    });
+    storyText.insertAdjacentElement("afterend", storyToggle);
+  }
+};
+
+syncHomeMobileEnhancements();
+homeMobileLayout.addEventListener("change", syncHomeMobileEnhancements);
+
 const productTransitionAssets = {
   window: "img/hero/casa-vetri-toscana.png",
   "interior-door": "img/catalogo/porte/OPERA_211QI.jpg",
@@ -777,7 +839,8 @@ const setupSmoothHorizontalWheel = ({
   let animationFrame = null;
   let lastWheelInputAt = -Infinity;
   let continuousTargetScroll = scroller.scrollLeft;
-  let continuousBoundaryDirection = 0;
+  let boundaryIntentDistance = 0;
+  let boundaryIntentDirection = 0;
 
   const getMaxScroll = () => Math.max(0, scroller.scrollWidth - scroller.clientWidth);
   const clampScroll = (value, maxScroll = getMaxScroll()) => Math.max(0, Math.min(maxScroll, value));
@@ -824,7 +887,7 @@ const setupSmoothHorizontalWheel = ({
     const distance = continuousTargetScroll - scroller.scrollLeft;
 
     if (Math.abs(distance) > 0.45) {
-      scroller.scrollLeft += distance * 0.16;
+      scroller.scrollLeft += distance * 0.2;
       onUpdate?.();
       animationFrame = window.requestAnimationFrame(animateContinuousScroll);
       return;
@@ -835,15 +898,6 @@ const setupSmoothHorizontalWheel = ({
     animationFrame = null;
     onUpdate?.();
 
-    if (continuousBoundaryDirection) {
-      const direction = continuousBoundaryDirection;
-      continuousBoundaryDirection = 0;
-      if (onBoundary) {
-        onBoundary(direction);
-      } else {
-        moveHomeToAdjacentSlide(direction);
-      }
-    }
   };
 
   const animateToPage = (direction) => {
@@ -923,29 +977,47 @@ const setupSmoothHorizontalWheel = ({
           : event.deltaMode === 2
             ? event.deltaY * scroller.clientWidth
             : event.deltaY;
-        const wheelDistance = normalizedWheelDistance * (isLikelyTrackpad(event) ? 0.45 : 0.65);
+        const wheelDistance = normalizedWheelDistance * (isLikelyTrackpad(event) ? 0.55 : 0.78);
         const requestedScrollLeft = continuousTargetScroll + wheelDistance;
         const nextScrollLeft = clampScroll(requestedScrollLeft, maxScroll);
         const isCrossingBoundary = requestedScrollLeft < 0 || requestedScrollLeft > maxScroll;
+        const actualBoundaryTolerance = 2;
+        const isActuallyAtBoundary = direction > 0
+          ? scroller.scrollLeft >= maxScroll - actualBoundaryTolerance
+          : scroller.scrollLeft <= actualBoundaryTolerance;
+        const minimumIntentDelta = isLikelyTrackpad(event) ? 7 : 40;
+        const boundaryThreshold = isLikelyTrackpad(event) ? 140 : 120;
+
+        if (direction !== boundaryIntentDirection) {
+          boundaryIntentDistance = 0;
+          boundaryIntentDirection = direction;
+        }
+
+        if (
+          isCrossingBoundary
+          && isActuallyAtBoundary
+          && Math.abs(normalizedWheelDistance) >= minimumIntentDelta
+        ) {
+          boundaryIntentDistance += Math.abs(wheelDistance);
+        } else {
+          boundaryIntentDistance = 0;
+        }
+
+        const shouldLeaveBoundary = boundaryIntentDistance >= boundaryThreshold;
 
         if (nextScrollLeft !== continuousTargetScroll) {
           event.preventDefault();
           stopHomeSmoothScroll();
           continuousTargetScroll = nextScrollLeft;
-          continuousBoundaryDirection = 0;
           if (!animationFrame) {
             animationFrame = window.requestAnimationFrame(animateContinuousScroll);
           }
-          if (isCrossingBoundary) {
-            if (onBoundary) {
-              onBoundary(direction);
-            } else {
-              moveHomeToAdjacentSlide(direction);
-            }
-          }
         } else if (isCrossingBoundary) {
           event.preventDefault();
-          continuousBoundaryDirection = 0;
+        }
+
+        if (shouldLeaveBoundary) {
+          boundaryIntentDistance = 0;
           if (onBoundary) {
             onBoundary(direction);
           } else {
@@ -1003,7 +1075,8 @@ const setupSmoothHorizontalWheel = ({
     currentIndex = getNearestPageIndex();
     scroller.scrollLeft = pageTargets[currentIndex];
     continuousTargetScroll = scroller.scrollLeft;
-    continuousBoundaryDirection = 0;
+    boundaryIntentDistance = 0;
+    boundaryIntentDirection = 0;
     onUpdate?.();
   });
 
@@ -1022,19 +1095,11 @@ document.querySelectorAll(".animated-product-card, .product-house-hotspot").forE
   trigger.addEventListener("click", (event) => {
     event.preventDefault();
     const href = trigger.dataset.href || trigger.getAttribute("href");
-    const transition = trigger.dataset.transition;
-    const title = trigger.dataset.title || trigger.querySelector("h2")?.textContent?.trim() || trigger.textContent.trim() || "Catalogo";
-    const objectImage = productTransitionAssets[transition] || productTransitionAssets.window;
 
     if (!href) {
       return;
     }
 
-    sessionStorage.setItem("arProductPageEffect", transition || "default");
-    sessionStorage.setItem("arProductPageTitle", title);
-    if (objectImage) {
-      sessionStorage.setItem("arProductPageObject", new URL(objectImage, window.location.href).href);
-    }
     window.location.href = href;
   });
 });
@@ -1120,6 +1185,7 @@ if (doorCatalogGrid) {
   const doorCards = Array.from(doorCatalogGrid.querySelectorAll(".catalog-product-card"));
   const getDoorCategory = (card) => card.querySelector(".eyebrow")?.textContent.trim() || "Altri modelli";
   const doorCategories = [...new Set(doorCards.map(getDoorCategory))];
+  const requestedDoorCategory = new URLSearchParams(window.location.search).get("linea")?.toUpperCase();
 
   if (doorCards.length && doorCategories.length) {
     const categoryPicker = document.createElement("div");
@@ -1140,16 +1206,8 @@ if (doorCatalogGrid) {
     `;
 
     const setActiveCategory = (category) => {
-      let visibleModels = 0;
-
       doorCards.forEach((card) => {
-        const matchesCategory = getDoorCategory(card) === category;
-        const shouldShow = matchesCategory && visibleModels < 4;
-        card.hidden = !shouldShow;
-
-        if (shouldShow) {
-          visibleModels += 1;
-        }
+        card.hidden = getDoorCategory(card) !== category;
       });
 
       categoryPicker.querySelectorAll("button").forEach((button) => {
@@ -1161,22 +1219,175 @@ if (doorCatalogGrid) {
       doorCatalogGrid.hidden = false;
       doorCatalogGrid.classList.add("is-door-filtered");
       moreModels.hidden = false;
-      window.requestAnimationFrame(() => doorCatalogGrid.scrollIntoView({ behavior: "smooth", block: "start" }));
     };
 
     doorCategories.forEach((category) => {
+      const categoryCards = doorCards.filter((card) => getDoorCategory(card) === category);
+      const representativeImage = categoryCards[0]?.querySelector("img");
       const button = document.createElement("button");
       button.type = "button";
       button.dataset.category = category;
-      button.innerHTML = `<span>Linea</span><strong>${category}</strong><small>Apri 4 modelli</small>`;
+      button.innerHTML = `
+        ${representativeImage ? `<img src="${representativeImage.getAttribute("src")}" alt="Porta rappresentativa della linea ${category}" loading="lazy">` : ""}
+        <span>Linea</span>
+        <strong>${category}</strong>
+        <small>Apri ${categoryCards.length} ${categoryCards.length === 1 ? "modello" : "modelli"}</small>
+      `;
       button.setAttribute("aria-pressed", "false");
-      button.addEventListener("click", () => setActiveCategory(category));
+      button.addEventListener("click", () => {
+        window.location.href = `${window.location.pathname}?linea=${encodeURIComponent(category)}`;
+      });
       categoryPicker.append(button);
     });
 
     doorCatalogGrid.before(categoryPicker);
     doorCatalogGrid.after(moreModels);
-    doorCatalogGrid.hidden = true;
+
+    if (requestedDoorCategory && doorCategories.includes(requestedDoorCategory)) {
+      doorCards
+        .filter((card) => getDoorCategory(card) !== requestedDoorCategory)
+        .forEach((card) => card.remove());
+
+      const dedicatedHeader = document.createElement("div");
+      dedicatedHeader.className = "door-dedicated-header";
+      dedicatedHeader.innerHTML = `
+        <div>
+          <p class="eyebrow">Linea selezionata</p>
+          <h2>Modelli ${requestedDoorCategory}</h2>
+        </div>
+        <a class="btn btn-dark" href="${window.location.pathname}">&larr; Torna ai modelli</a>
+      `;
+      const catalogSectionHead = doorCatalogGrid.closest(".generated-catalog-section")?.querySelector(".section-head");
+      if (catalogSectionHead) {
+        catalogSectionHead.remove();
+      }
+
+      document.body.classList.add("is-door-line-view");
+      categoryPicker.hidden = true;
+      doorCatalogGrid.before(dedicatedHeader);
+      setActiveCategory(requestedDoorCategory);
+    } else {
+      doorCatalogGrid.hidden = true;
+    }
+  }
+}
+
+const windowCatalogGrid = /\/prodotti\/finestre\/(?:index\.html)?$/i.test(window.location.pathname)
+  ? document.querySelector(".generated-catalog-grid")
+  : null;
+
+if (windowCatalogGrid) {
+  document.body.classList.add("window-catalog-page");
+  const windowCards = Array.from(windowCatalogGrid.querySelectorAll(".catalog-product-card"));
+  const getWindowCategory = (card) => card.querySelector(".eyebrow")?.textContent.trim() || "Altri modelli";
+  const windowCategories = [...new Set(windowCards.map(getWindowCategory))];
+  const requestedWindowCategory = new URLSearchParams(window.location.search).get("linea")?.toUpperCase();
+
+  if (windowCards.length && windowCategories.length) {
+    const categoryPicker = document.createElement("div");
+    categoryPicker.className = "door-catalog-picker window-catalog-picker";
+    categoryPicker.setAttribute("aria-label", "Seleziona una categoria di finestre");
+    categoryPicker.innerHTML = "<p>Scegli una categoria per vedere tutti i modelli disponibili.</p>";
+
+    windowCategories.forEach((category) => {
+      const categoryCards = windowCards.filter((card) => getWindowCategory(card) === category);
+      const representativeImage = categoryCards[0]?.querySelector("img");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.innerHTML = `
+        ${representativeImage ? `<img src="${representativeImage.getAttribute("src")}" alt="Finestra rappresentativa della categoria ${category}" loading="lazy">` : ""}
+        <span>Categoria</span>
+        <strong>${category}</strong>
+        <small>Apri ${categoryCards.length} ${categoryCards.length === 1 ? "modello" : "modelli"}</small>
+      `;
+      button.addEventListener("click", () => {
+        window.location.href = `${window.location.pathname}?linea=${encodeURIComponent(category)}`;
+      });
+      categoryPicker.append(button);
+    });
+
+    windowCatalogGrid.before(categoryPicker);
+
+    if (requestedWindowCategory && windowCategories.includes(requestedWindowCategory)) {
+      windowCards
+        .filter((card) => getWindowCategory(card) !== requestedWindowCategory)
+        .forEach((card) => card.remove());
+
+      const dedicatedHeader = document.createElement("div");
+      dedicatedHeader.className = "door-dedicated-header";
+      dedicatedHeader.innerHTML = `
+        <div>
+          <p class="eyebrow">Categoria selezionata</p>
+          <h2>Modelli ${requestedWindowCategory}</h2>
+        </div>
+        <a class="btn btn-dark" href="${window.location.pathname}">&larr; Torna ai modelli</a>
+      `;
+      windowCatalogGrid.closest(".generated-catalog-section")?.querySelector(".section-head")?.remove();
+      categoryPicker.hidden = true;
+      windowCatalogGrid.before(dedicatedHeader);
+      windowCatalogGrid.classList.add("is-window-filtered");
+    } else {
+      windowCatalogGrid.hidden = true;
+    }
+  }
+}
+
+if (window.location.pathname.includes("/prodotti/finestre/") && document.querySelector(".catalog-product-hero")) {
+  const technicalInfo = document.querySelector(".catalog-info-text");
+  const productTitle = document.querySelector(".catalog-product-hero h1")?.textContent.trim() || "";
+  document.querySelector(".catalog-product-hero .button-row .btn-dark")?.remove();
+
+  if (technicalInfo) {
+    const rawText = technicalInfo.textContent
+      .replace(/Ã©/g, "é")
+      .replace(/Ã¨/g, "è")
+      .replace(/Ã²/g, "ò")
+      .replace(/Ã /g, "à");
+    const model = rawText.match(/MODELLO:\s*([^\n]+)/i)?.[1]?.trim().replaceAll("_", " ") || productTitle;
+    const page = rawText.match(/PAGINA PDF:\s*(\d+)/i)?.[1] || "";
+    const detailParagraph = technicalInfo.querySelectorAll("p")[1]?.textContent || "";
+    const detailLines = detailParagraph
+      .replace(/Ã©/g, "é")
+      .replace(/Ã¨/g, "è")
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !/^TESTO PDF:?$/i.test(line) && !/^\d+$/.test(line))
+      .filter((line) => line.toLowerCase() !== productTitle.toLowerCase())
+      .map((line) => line
+        .replaceAll("_", " ")
+        .replace(/portanteinterno/gi, "portante interno")
+        .replace(/lariceerovere/gi, "larice e rovere")
+        .replace(/\s*:\s*/g, ": ")
+        .replace(/\s+/g, " "));
+
+    technicalInfo.replaceChildren();
+    technicalInfo.classList.add("catalog-technical-summary");
+
+    const facts = document.createElement("dl");
+    [["Modello", model], ["Pagina catalogo", page]].forEach(([label, value]) => {
+      if (!value) return;
+      const item = document.createElement("div");
+      const term = document.createElement("dt");
+      const description = document.createElement("dd");
+      term.textContent = label;
+      description.textContent = value;
+      item.append(term, description);
+      facts.append(item);
+    });
+    technicalInfo.append(facts);
+
+    if (detailLines.length) {
+      const detailsTitle = document.createElement("h2");
+      detailsTitle.textContent = "Caratteristiche tecniche";
+      const details = document.createElement("ul");
+      detailLines.forEach((line) => {
+        const item = document.createElement("li");
+        const normalizedLine = line.charAt(0).toUpperCase() + line.slice(1);
+        item.textContent = /[.!?]$/.test(normalizedLine) ? normalizedLine : `${normalizedLine}.`;
+        details.append(item);
+      });
+      technicalInfo.append(detailsTitle, details);
+    }
   }
 }
 
@@ -1363,23 +1574,10 @@ if (homeProductStrip) {
       activationCheck: isHomeProductHorizontalReady,
       onUpdate: updateHomeProductMotion,
       onBoundary: (direction) => {
-        const destination = direction > 0
-          ? homeProductSlide?.nextElementSibling
-          : homeProductSlide?.previousElementSibling;
-
-        if (!destination?.matches("[data-home-slide]")) {
-          return;
-        }
-
-        stopHomeSmoothScroll();
-        const destinationTop = window.scrollY + destination.getBoundingClientRect().top;
-        window.scrollTo({
-          top: destinationTop,
-          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-        });
+        moveHomeToAdjacentSlide(direction);
       },
       duration: 550,
-      gestureReleaseGap: 120,
+      gestureReleaseGap: 360,
       continuous: true
     });
   }
@@ -1388,32 +1586,9 @@ if (homeProductStrip) {
 
 stopHomeSmoothScroll = setupSmoothHomeScroll() || stopHomeSmoothScroll;
 
-const pageEffect = sessionStorage.getItem("arProductPageEffect");
-const pageEffectTitle = sessionStorage.getItem("arProductPageTitle");
-const pageEffectObject = sessionStorage.getItem("arProductPageObject");
-
-if (pageEffect) {
-  sessionStorage.removeItem("arProductPageEffect");
-  sessionStorage.removeItem("arProductPageTitle");
-  sessionStorage.removeItem("arProductPageObject");
-
-  const effect = document.createElement("div");
-  effect.className = `page-open-effect is-${pageEffect}`;
-  effect.setAttribute("aria-hidden", "true");
-  effect.innerHTML = `<div class="page-open-pattern"></div><p>${pageEffectTitle || "Catalogo"}</p>`;
-  if (pageEffectObject) {
-    effect.style.setProperty("--page-object-image", `url("${pageEffectObject}")`);
-  }
-  document.body.appendChild(effect);
-
-  window.setTimeout(() => {
-    effect.classList.add("is-finished");
-  }, 80);
-
-  window.setTimeout(() => {
-    effect.remove();
-  }, 1080);
-}
+sessionStorage.removeItem("arProductPageEffect");
+sessionStorage.removeItem("arProductPageTitle");
+sessionStorage.removeItem("arProductPageObject");
 
 const homeSlides = document.querySelectorAll("[data-home-slide]");
 
