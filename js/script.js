@@ -250,6 +250,31 @@ setupCollapsiblePageHero({
   titleAnimationEasing: "cubic-bezier(0.22, 1, 0.36, 1)"
 });
 
+/* Prodotti, Preventivo e Chi siamo: passa uno scatto della rotella ogni due. */
+const usesControlledWheel = document.body.classList.contains("products-page")
+  || document.body.classList.contains("quote-page-modern")
+  || /\/chi-siamo\.html$/i.test(window.location.pathname);
+
+if (usesControlledWheel) {
+  let controlledWheelTicks = 0;
+
+  window.addEventListener("wheel", (event) => {
+    if (
+      event.defaultPrevented
+      || event.ctrlKey
+      || isLikelyTrackpad(event)
+      || Math.abs(event.deltaY) <= Math.abs(event.deltaX)
+    ) {
+      return;
+    }
+
+    controlledWheelTicks += 1;
+    if (controlledWheelTicks % 2 === 1) {
+      event.preventDefault();
+    }
+  }, { passive: false });
+}
+
 const isElementAtViewportCenter = (element) => {
   if (!element) {
     return false;
@@ -564,16 +589,62 @@ if (window.location.pathname.includes("/prodotti/") && !document.querySelector("
   const header = document.querySelector(".site-header");
   if (header) {
     const isCatalogDetail = Boolean(document.querySelector(".catalog-product-hero"));
-    const isWindowDetail = isCatalogDetail && window.location.pathname.includes("/prodotti/finestre/");
-    const isDoorDetail = isCatalogDetail && window.location.pathname.includes("/prodotti/porte/");
-    const backHref = isWindowDetail
-      ? `${assetBasePath}prodotti/finestre/`
-      : isDoorDetail
-        ? `${assetBasePath}prodotti/porte/`
-        : `${assetBasePath}prodotti.html`;
-    const backLabel = isCatalogDetail ? "Indietro al catalogo" : "Indietro ai prodotti";
+    const productPathParts = window.location.pathname.split("/").filter(Boolean);
+    const productsRootIndex = productPathParts.findIndex((part) => part.toLowerCase() === "prodotti");
+    const catalogSlug = productPathParts[productsRootIndex + 1]?.toLowerCase();
+    const parentSlug = productPathParts[productsRootIndex + 2]?.toLowerCase();
+    const productTitle = document.querySelector(".catalog-product-hero h1")?.textContent.trim().toUpperCase();
+    const categorizedCatalogs = new Set(["porte", "finestre", "avvolgibili"]);
+    let parentCategory = categorizedCatalogs.has(catalogSlug)
+      ? parentSlug?.replaceAll("-", " ").toUpperCase()
+      : "";
+
+    if (catalogSlug === "avvolgibili" && productTitle === "COLORI") {
+      parentCategory = "COLORI DISPONIBILI";
+    }
+
+    if (catalogSlug === "inferriate" && productTitle) {
+      if (productTitle.startsWith("GEMINUS")) parentCategory = "GEMINUS";
+      else if (productTitle.startsWith("GRATA")) parentCategory = "GRATE";
+      else if (productTitle === "CAPOSCALA") parentCategory = "CAPOSCALA";
+      else if (productTitle === "CERTIFICAZIONI") parentCategory = "CERTIFICAZIONI";
+      else parentCategory = "ACCESSORI E COLORI";
+    }
+
+    const selectedCategory = new URLSearchParams(window.location.search).get("linea");
+    let backHref = `${assetBasePath}prodotti.html#cataloghi-prodotti`;
+    let backLabel = "Torna al catalogo generale";
+
+    if (isCatalogDetail && catalogSlug) {
+      backHref = `${assetBasePath}prodotti/${catalogSlug}/${parentCategory ? `?linea=${encodeURIComponent(parentCategory)}` : ""}`;
+      backLabel = "Indietro ai modelli";
+    } else if (selectedCategory) {
+      backHref = window.location.pathname;
+      backLabel = "Torna a tutti i modelli";
+    }
+
     header.insertAdjacentHTML("afterend", `<a class="product-back-link" href="${backHref}">${backLabel}</a>`);
+
+    if (isCatalogDetail) {
+      const detailBackLink = document.querySelector(".catalog-product-hero .button-row .btn-dark");
+      detailBackLink?.remove();
+    }
   }
+}
+
+/* Nei sette cataloghi principali le card mostrano nomi modello chiari e senza ripetizioni. */
+if (document.querySelector(".catalog-page-hero")) {
+  document.querySelectorAll(".generated-catalog-grid .catalog-product-card h2").forEach((title) => {
+    const words = title.textContent.trim().split(/\s+/);
+    const cleanWords = words.filter((word, index) => {
+      if (index === 0) return true;
+      return word.localeCompare(words[index - 1], "it", { sensitivity: "base" }) !== 0;
+    });
+
+    title.textContent = cleanWords.join(" ");
+    const image = title.closest(".catalog-product-card")?.querySelector("img");
+    if (image) image.alt = title.textContent;
+  });
 }
 
 document.querySelectorAll(".filter-btn").forEach((button) => {
@@ -1255,7 +1326,6 @@ if (doorCatalogGrid) {
           <p class="eyebrow">Linea selezionata</p>
           <h2>Modelli ${requestedDoorCategory}</h2>
         </div>
-        <a class="btn btn-dark" href="${window.location.pathname}">&larr; Torna ai modelli</a>
       `;
       const catalogSectionHead = doorCatalogGrid.closest(".generated-catalog-section")?.querySelector(".section-head");
       if (catalogSectionHead) {
@@ -1279,6 +1349,22 @@ const windowCatalogGrid = /\/prodotti\/finestre\/(?:index\.html)?$/i.test(window
 if (windowCatalogGrid) {
   document.body.classList.add("window-catalog-page");
   const windowCards = Array.from(windowCatalogGrid.querySelectorAll(".catalog-product-card"));
+
+  windowCards.forEach((card) => {
+    const title = card.querySelector("h2");
+    const image = card.querySelector("img");
+    const cleanTitle = title?.textContent.trim().replace(/^LEGNO\s+LEGNO\s+/i, "LEGNO ");
+
+    if (title && cleanTitle) {
+      title.textContent = cleanTitle;
+    }
+    if (image && cleanTitle) {
+      image.alt = cleanTitle;
+    }
+
+    card.querySelectorAll("div > p:not(.eyebrow)").forEach((description) => description.remove());
+  });
+
   const getWindowCategory = (card) => card.querySelector(".eyebrow")?.textContent.trim() || "Altri modelli";
   const windowCategories = [...new Set(windowCards.map(getWindowCategory))];
   const requestedWindowCategory = new URLSearchParams(window.location.search).get("linea")?.toUpperCase();
@@ -1320,7 +1406,6 @@ if (windowCatalogGrid) {
           <p class="eyebrow">Categoria selezionata</p>
           <h2>Modelli ${requestedWindowCategory}</h2>
         </div>
-        <a class="btn btn-dark" href="${window.location.pathname}">&larr; Torna ai modelli</a>
       `;
       windowCatalogGrid.closest(".generated-catalog-section")?.querySelector(".section-head")?.remove();
       categoryPicker.hidden = true;
@@ -1332,7 +1417,158 @@ if (windowCatalogGrid) {
   }
 }
 
-if (window.location.pathname.includes("/prodotti/finestre/") && document.querySelector(".catalog-product-hero")) {
+const rollerCatalogGrid = /\/prodotti\/avvolgibili\/(?:index\.html)?$/i.test(window.location.pathname)
+  ? document.querySelector(".generated-catalog-grid")
+  : null;
+
+if (rollerCatalogGrid) {
+  document.body.classList.add("roller-catalog-page");
+  const rollerCards = Array.from(rollerCatalogGrid.querySelectorAll(".catalog-product-card"));
+  const getRollerCategory = (card) => {
+    const model = card.querySelector("h2")?.textContent.trim().toUpperCase();
+    return model === "COLORI"
+      ? "COLORI DISPONIBILI"
+      : card.querySelector(".eyebrow")?.textContent.trim() || "ALTRI MODELLI";
+  };
+
+  rollerCards.forEach((card) => {
+    const title = card.querySelector("h2");
+    const categoryLabel = card.querySelector(".eyebrow");
+    const cleanTitle = title?.textContent
+      .trim()
+      .replace(/\b([A-ZÀ-ÖØ-Ý0-9]+)(?:\s+\1\b)+/gi, "$1");
+
+    if (title && cleanTitle) {
+      title.textContent = cleanTitle;
+      const image = card.querySelector("img");
+      if (image) image.alt = cleanTitle;
+    }
+
+    if (title?.textContent.trim().toUpperCase() === "COLORI" && categoryLabel) {
+      categoryLabel.textContent = "COLORI DISPONIBILI";
+    }
+
+    card.querySelectorAll("div > p:not(.eyebrow)").forEach((description) => description.remove());
+    card.dataset.rollerCategory = getRollerCategory(card);
+  });
+
+  const rollerCategories = [...new Set(rollerCards.map(getRollerCategory))];
+  const requestedRollerCategory = new URLSearchParams(window.location.search).get("linea")?.toUpperCase();
+
+  if (rollerCards.length && rollerCategories.length) {
+    const categoryPicker = document.createElement("div");
+    categoryPicker.className = "door-catalog-picker roller-catalog-picker";
+    categoryPicker.setAttribute("aria-label", "Seleziona una categoria di avvolgibili");
+    categoryPicker.innerHTML = "<p>Scegli una categoria per vedere tutti i modelli disponibili.</p>";
+
+    rollerCategories.forEach((category) => {
+      const categoryCards = rollerCards.filter((card) => getRollerCategory(card) === category);
+      const representativeImage = categoryCards[0]?.querySelector("img");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.innerHTML = `
+        ${representativeImage ? `<img src="${representativeImage.getAttribute("src")}" alt="Categoria ${category}" loading="lazy">` : ""}
+        <span>Categoria</span>
+        <strong>${category}</strong>
+        <small>Apri ${categoryCards.length} ${categoryCards.length === 1 ? "modello" : "modelli"}</small>
+      `;
+      button.addEventListener("click", () => {
+        window.location.href = `${window.location.pathname}?linea=${encodeURIComponent(category)}`;
+      });
+      categoryPicker.append(button);
+    });
+
+    rollerCatalogGrid.before(categoryPicker);
+
+    if (requestedRollerCategory && rollerCategories.includes(requestedRollerCategory)) {
+      rollerCards
+        .filter((card) => getRollerCategory(card) !== requestedRollerCategory)
+        .forEach((card) => card.remove());
+
+      const dedicatedHeader = document.createElement("div");
+      dedicatedHeader.className = "door-dedicated-header";
+      dedicatedHeader.innerHTML = `
+        <div>
+          <p class="eyebrow">Categoria selezionata</p>
+          <h2>${requestedRollerCategory}</h2>
+        </div>
+      `;
+      rollerCatalogGrid.closest(".generated-catalog-section")?.querySelector(".section-head")?.remove();
+      categoryPicker.hidden = true;
+      rollerCatalogGrid.before(dedicatedHeader);
+      rollerCatalogGrid.classList.add("is-roller-filtered");
+    } else {
+      rollerCatalogGrid.hidden = true;
+    }
+  }
+}
+
+const grateCatalogGrid = /\/prodotti\/inferriate\/(?:index\.html)?$/i.test(window.location.pathname)
+  ? document.querySelector(".generated-catalog-grid")
+  : null;
+
+if (grateCatalogGrid) {
+  const grateCards = Array.from(grateCatalogGrid.querySelectorAll(".catalog-product-card"));
+  const getGrateCategory = (card) => {
+    const model = card.querySelector("h2")?.textContent.trim().toUpperCase() || "";
+    if (model.startsWith("GEMINUS")) return "GEMINUS";
+    if (model.startsWith("GRATA")) return "GRATE";
+    if (model === "CAPOSCALA") return "CAPOSCALA";
+    if (model === "CERTIFICAZIONI") return "CERTIFICAZIONI";
+    return "ACCESSORI E COLORI";
+  };
+  const grateCategories = ["GEMINUS", "GRATE", "ACCESSORI E COLORI", "CAPOSCALA", "CERTIFICAZIONI"]
+    .filter((category) => grateCards.some((card) => getGrateCategory(card) === category));
+  const requestedGrateCategory = new URLSearchParams(window.location.search).get("linea")?.toUpperCase();
+
+  if (grateCards.length && grateCategories.length) {
+    const categoryPicker = document.createElement("div");
+    categoryPicker.className = "door-catalog-picker grate-catalog-picker";
+    categoryPicker.setAttribute("aria-label", "Seleziona una categoria di inferriate");
+
+    grateCategories.forEach((category) => {
+      const categoryCards = grateCards.filter((card) => getGrateCategory(card) === category);
+      const representativeImage = categoryCards[0]?.querySelector("img");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.innerHTML = `
+        ${representativeImage ? `<img src="${representativeImage.getAttribute("src")}" alt="Immagine rappresentativa ${category}" loading="lazy">` : ""}
+        <span>Categoria</span>
+        <strong>${category}</strong>
+        <small>Apri ${categoryCards.length} ${categoryCards.length === 1 ? "modello" : "modelli"}</small>
+      `;
+      button.addEventListener("click", () => {
+        window.location.href = `${window.location.pathname}?linea=${encodeURIComponent(category)}`;
+      });
+      categoryPicker.append(button);
+    });
+
+    grateCatalogGrid.before(categoryPicker);
+
+    if (requestedGrateCategory && grateCategories.includes(requestedGrateCategory)) {
+      grateCards
+        .filter((card) => getGrateCategory(card) !== requestedGrateCategory)
+        .forEach((card) => card.remove());
+
+      const dedicatedHeader = document.createElement("div");
+      dedicatedHeader.className = "door-dedicated-header";
+      dedicatedHeader.innerHTML = `
+        <div>
+          <p class="eyebrow">Categoria selezionata</p>
+          <h2>Modelli ${requestedGrateCategory}</h2>
+        </div>
+      `;
+      grateCatalogGrid.closest(".generated-catalog-section")?.querySelector(".section-head")?.remove();
+      categoryPicker.hidden = true;
+      grateCatalogGrid.before(dedicatedHeader);
+      grateCatalogGrid.classList.add("is-grate-filtered");
+    } else {
+      grateCatalogGrid.hidden = true;
+    }
+  }
+}
+
+if (window.location.pathname.includes("/prodotti/") && document.querySelector(".catalog-product-hero")) {
   const technicalInfo = document.querySelector(".catalog-info-text");
   const productTitle = document.querySelector(".catalog-product-hero h1")?.textContent.trim() || "";
   document.querySelector(".catalog-product-hero .button-row .btn-dark")?.remove();
@@ -1343,42 +1579,43 @@ if (window.location.pathname.includes("/prodotti/finestre/") && document.querySe
       .replace(/Ã¨/g, "è")
       .replace(/Ã²/g, "ò")
       .replace(/Ã /g, "à");
-    const model = rawText.match(/MODELLO:\s*([^\n]+)/i)?.[1]?.trim().replaceAll("_", " ") || productTitle;
-    const page = rawText.match(/PAGINA PDF:\s*(\d+)/i)?.[1] || "";
-    const detailParagraph = technicalInfo.querySelectorAll("p")[1]?.textContent || "";
-    const detailLines = detailParagraph
-      .replace(/Ã©/g, "é")
-      .replace(/Ã¨/g, "è")
+    const normalizedTitle = productTitle.replaceAll("_", " ").replace(/\s+/g, " ").trim().toUpperCase();
+    const detailLines = rawText
+      .replace(/MODELLO:\s*[^\r\n]*/gi, "")
+      .replace(/PAGINA PDF:\s*\d+/gi, "")
+      .replace(/TESTO PDF:?/gi, "")
+      .replace(/[•·]+/g, "\n")
       .split(/\r?\n/)
       .map((line) => line.trim())
-      .filter((line) => line && !/^TESTO PDF:?$/i.test(line) && !/^\d+$/.test(line))
-      .filter((line) => line.toLowerCase() !== productTitle.toLowerCase())
       .map((line) => line
         .replaceAll("_", " ")
         .replace(/portanteinterno/gi, "portante interno")
         .replace(/lariceerovere/gi, "larice e rovere")
         .replace(/\s*:\s*/g, ": ")
-        .replace(/\s+/g, " "));
+        .replace(/\s+/g, " "))
+      .filter((line) => line && !/^\d+$/.test(line))
+      .filter((line) => {
+        const normalizedLine = line.toUpperCase();
+        return normalizedLine !== normalizedTitle && !normalizedTitle.startsWith(`${normalizedLine} `);
+      })
+      .map((line) => {
+        const cleanLine = line
+          .replace(/^FINITURA\s*\/\s*/i, "Finitura: ")
+          .replace(/^FINITURE\s*:?\s*/i, "Colorazioni disponibili: ")
+          .replace(/^COLORI(?:\s+DISPONIBILI)?\s*:?\s*/i, "Colorazioni disponibili: ");
+        const words = cleanLine.split(/\s+/);
+        return words
+          .filter((word, index) => index === 0 || word.localeCompare(words[index - 1], "it", { sensitivity: "base" }) !== 0)
+          .join(" ");
+      })
+      .filter((line, index, lines) => line && lines.findIndex((item) => item.localeCompare(line, "it", { sensitivity: "base" }) === 0) === index);
 
     technicalInfo.replaceChildren();
     technicalInfo.classList.add("catalog-technical-summary");
 
-    const facts = document.createElement("dl");
-    [["Modello", model], ["Pagina catalogo", page]].forEach(([label, value]) => {
-      if (!value) return;
-      const item = document.createElement("div");
-      const term = document.createElement("dt");
-      const description = document.createElement("dd");
-      term.textContent = label;
-      description.textContent = value;
-      item.append(term, description);
-      facts.append(item);
-    });
-    technicalInfo.append(facts);
-
     if (detailLines.length) {
       const detailsTitle = document.createElement("h2");
-      detailsTitle.textContent = "Caratteristiche tecniche";
+      detailsTitle.textContent = "Finiture e caratteristiche";
       const details = document.createElement("ul");
       detailLines.forEach((line) => {
         const item = document.createElement("li");

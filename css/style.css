@@ -483,6 +483,35 @@ textarea {
   color: var(--accent);
 }
 
+/* Home header: logo protagonista e firma coordinata con il preload. */
+.home-document .site-header {
+  min-height: 68px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+.home-document .site-header.is-scrolled {
+  min-height: 62px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.home-document .site-header .brand {
+  gap: 15px;
+  font-family: var(--font-body);
+  font-size: clamp(0.88rem, 1.05vw, 1rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.home-document .site-header .brand img {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+}
+
 .made-in-italy-pill {
   display: inline-flex;
   align-items: center;
@@ -2008,6 +2037,11 @@ body.is-trackpad-scroll .home-document {
   aspect-ratio: 0.9 / 1;
 }
 
+/* Inquadratura dedicata alla INC 184 nella sola card Porte della home. */
+.home-slide-products .home-product-strip img.home-product-image-inc184 {
+  object-position: 28% center;
+}
+
 .home-product-strip a:nth-child(5) img {
   aspect-ratio: 1.35 / 1;
 }
@@ -2263,6 +2297,25 @@ body.is-trackpad-scroll .home-document {
 .home-work-slide p {
   margin: 0;
   color: var(--muted);
+}
+
+/* Realizzazioni desktop: riserva spazio alle miniature sotto al testo. */
+@media (min-width: 861px) {
+  .home-slide-works .home-work-slide > div {
+    max-width: 500px;
+    padding-bottom: clamp(64px, 8vh, 88px);
+  }
+
+  .home-slide-works .home-work-slide h3 {
+    margin: 8px 0 10px;
+    font-size: clamp(1.35rem, 2vw, 2.1rem);
+    line-height: 1.12;
+  }
+
+  .home-slide-works .home-work-slide p {
+    font-size: clamp(0.88rem, 1vw, 1rem);
+    line-height: 1.5;
+  }
 }
 
 .home-work-strip {
@@ -3540,6 +3593,11 @@ body.is-trackpad-scroll .home-document {
   will-change: transform;
 }
 
+/* Punto focale dedicato alla porta INC 184 nel solo pannello Porte interne. */
+.animated-product-card > img.product-panel-image-inc184 {
+  object-position: 28% center;
+}
+
 .animated-product-card:hover > img {
   transform: scale(1.05);
 }
@@ -4278,6 +4336,11 @@ body.is-trackpad-scroll .home-document {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
+}
+
+/* I cataloghi non mostrano il conteggio totale sopra ai modelli. */
+.generated-catalog-section > .section-head > .eyebrow {
+  display: none;
 }
 
 .catalog-product-card {
@@ -6105,6 +6168,18 @@ body.is-trackpad-scroll .home-document {
     gap: 10px;
   }
 
+  .home-document .site-header .brand {
+    gap: 10px;
+    font-size: 0.76rem;
+    letter-spacing: 0.12em;
+  }
+
+  .home-document .site-header .brand img {
+    width: 46px;
+    height: 46px;
+    flex-basis: 46px;
+  }
+
   .made-in-italy-pill {
     margin-left: auto;
     padding: 6px 9px;
@@ -6490,6 +6565,18 @@ body.is-trackpad-scroll .home-document {
   .brand img {
     width: 34px;
     height: 34px;
+  }
+
+  .home-document .site-header .brand {
+    gap: 8px;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+  }
+
+  .home-document .site-header .brand img {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
   }
 
   .made-in-italy-pill {
@@ -7093,6 +7180,10 @@ body.is-trackpad-scroll .home-document {
   white-space: nowrap;
 }
 
+#cataloghi-prodotti {
+  scroll-margin-top: 92px;
+}
+
 .door-catalog-page .generated-catalog-section {
   min-height: min(72dvh, 820px);
 }
@@ -7249,9 +7340,155 @@ body.is-trackpad-scroll .home-document {
   display: none;
 }
 
+.roller-catalog-page .generated-catalog-grid[hidden] {
+  display: none;
+}
+
+.grate-catalog-page .generated-catalog-grid[hidden] {
+  display: none;
+}
+
+.grate-catalog-page .generated-catalog-grid.is-grate-filtered {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+/* Nelle card Finestre mostriamo soltanto categoria e nome del modello. */
+.window-catalog-page .catalog-product-card div > p:not(.eyebrow) {
+  display: none;
+}
+
+/* Nelle card Avvolgibili mostriamo soltanto categoria e nome del modello. */
+.roller-catalog-page .catalog-product-card div > p:not(.eyebrow) {
+  display: none;
+}
+
+/* Nei sette cataloghi principali le card mostrano solo il nome del modello. */
+.catalog-category-page .generated-catalog-grid .catalog-product-card div > p {
+  display: none;
+}
+
 .window-catalog-page .generated-catalog-grid.is-window-filtered {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: stretch;
+}
+
+.roller-catalog-page .generated-catalog-grid.is-roller-filtered {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+/* Catalogo Zanzariere: identità SharkNet e card essenziali. */
+.mosquito-catalog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(18px, 3vw, 38px);
+}
+
+.mosquito-catalog-heading h2 {
+  margin: 0;
+}
+
+.mosquito-catalog-heading > img {
+  width: clamp(130px, 15vw, 210px);
+  max-height: 64px;
+  object-fit: contain;
+}
+
+.catalog-hero-windows .catalog-page-hero,
+.catalog-hero-doors .catalog-page-hero,
+.catalog-hero-security-doors .catalog-page-hero,
+.catalog-hero-screens .catalog-page-hero,
+.catalog-hero-shutters .catalog-page-hero,
+.catalog-hero-rollers .catalog-page-hero,
+.catalog-hero-grates .catalog-page-hero {
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.catalog-hero-windows .catalog-page-hero {
+  background-image: linear-gradient(90deg, rgba(8, 9, 8, 0.8), rgba(8, 9, 8, 0.18) 72%), url("../img/hero/casa-vetri-toscana.png");
+}
+
+.catalog-hero-doors .catalog-page-hero {
+  background-image: linear-gradient(90deg, rgba(8, 9, 8, 0.78), rgba(8, 9, 8, 0.2) 72%), url("../img/catalogo/porte/GEO_230_NERO_HERO_HD.png");
+  background-size: 112% auto;
+  background-position: 82% 56%;
+}
+
+.catalog-hero-security-doors .catalog-page-hero {
+  background-image: linear-gradient(90deg, rgba(8, 9, 8, 0.76), rgba(8, 9, 8, 0.16) 72%), url("../img/prodotti/card-porte-blindate.png");
+}
+
+.catalog-hero-screens .catalog-page-hero {
+  background-image: linear-gradient(90deg, rgba(8, 9, 8, 0.82), rgba(8, 9, 8, 0.2) 70%), url("../img/prodotti/card-zanzariere.png");
+  background-position: center 48%;
+}
+
+.catalog-hero-shutters .catalog-page-hero {
+  background-image: linear-gradient(90deg, rgba(8, 9, 8, 0.8), rgba(8, 9, 8, 0.18) 72%), url("../img/prodotti/card-persiane.png");
+}
+
+.catalog-hero-rollers .catalog-page-hero {
+  background-image: linear-gradient(90deg, rgba(8, 9, 8, 0.78), rgba(8, 9, 8, 0.18) 72%), url("../img/prodotti/card-avvolgibili.png");
+}
+
+.catalog-hero-grates .catalog-page-hero {
+  background-image: linear-gradient(90deg, rgba(8, 9, 8, 0.8), rgba(8, 9, 8, 0.18) 72%), url("../img/prodotti/card-inferriate.png");
+}
+
+/* Quando l'hero fotografico si compatta, il nero entra in dissolvenza. */
+.catalog-category-page.is-catalog-hero-compact .catalog-page-hero::before {
+  opacity: 0;
+  animation: none;
+}
+
+.catalog-category-page.is-catalog-hero-compact .catalog-page-hero::after {
+  opacity: 1;
+}
+
+.catalog-hero-windows .catalog-page-hero::after,
+.catalog-hero-doors .catalog-page-hero::after,
+.catalog-hero-security-doors .catalog-page-hero::after,
+.catalog-hero-screens .catalog-page-hero::after,
+.catalog-hero-shutters .catalog-page-hero::after,
+.catalog-hero-rollers .catalog-page-hero::after,
+.catalog-hero-grates .catalog-page-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: #080808;
+  opacity: 0.2;
+  transition: opacity 0.72s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.mosquito-catalog-page .mosquito-hero-logo {
+  width: clamp(74px, 8vw, 112px);
+  max-height: 84px;
+  margin-bottom: 10px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.42));
+}
+
+.mosquito-catalog-page .catalog-product-card div > p {
+  display: none;
+}
+
+/* Persiane: nelle card restano soltanto nome del modello e pulsante. */
+.catalog-hero-shutters .catalog-product-card div > p {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .mosquito-catalog-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
 }
 
 .door-catalog-more {
@@ -7288,7 +7525,9 @@ body.is-trackpad-scroll .home-document {
 
 @media (max-width: 1000px) {
   .door-catalog-page .generated-catalog-grid.is-door-filtered,
-  .window-catalog-page .generated-catalog-grid.is-window-filtered {
+  .window-catalog-page .generated-catalog-grid.is-window-filtered,
+  .roller-catalog-page .generated-catalog-grid.is-roller-filtered,
+  .grate-catalog-page .generated-catalog-grid.is-grate-filtered {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -7343,7 +7582,9 @@ body.is-trackpad-scroll .home-document {
   }
 
   .door-catalog-page .generated-catalog-grid.is-door-filtered,
-  .window-catalog-page .generated-catalog-grid.is-window-filtered {
+  .window-catalog-page .generated-catalog-grid.is-window-filtered,
+  .roller-catalog-page .generated-catalog-grid.is-roller-filtered,
+  .grate-catalog-page .generated-catalog-grid.is-grate-filtered {
     grid-template-columns: 1fr;
   }
 
@@ -9449,6 +9690,17 @@ body.is-trackpad-scroll .home-document {
 
 .quote-page-modern .estimate-choice > span:last-child {
   gap: 0;
+}
+
+.quote-page-modern .estimate-choice-screening > span:last-child {
+  justify-items: center;
+  text-align: center;
+}
+
+.quote-page-modern .estimate-choice-screening strong {
+  width: 100%;
+  font-size: clamp(1.25rem, 1.85vw, 1.8rem);
+  text-align: center;
 }
 
 /* Home preload: firma minimale e autorevole. */
