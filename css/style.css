@@ -10341,4 +10341,69 @@ body.is-trackpad-scroll .home-document {
   .home-slide-story .story-signature {
     filter: brightness(0) invert(1) drop-shadow(0 5px 14px rgba(0, 0, 0, 0.52));
   }
+
+  /* Prodotti home: un pannello principale per volta, leggibile come le altre sezioni. */
+  .home-slide-products {
+    min-height: min(760px, 88svh);
+    display: flex;
+    align-items: center;
+    padding-block: 44px 30px;
+  }
+
+  .home-slide-products .home-product-strip {
+    gap: 16px;
+    padding-inline: 20px;
+    scroll-padding-inline: 20px;
+    scroll-snap-type: x mandatory;
+  }
+
+  .home-slide-products .home-product-strip a,
+  .home-slide-products .home-product-strip a:nth-child(n) {
+    flex: 0 0 calc(100vw - 48px);
+    width: calc(100vw - 48px);
+    max-width: 430px;
+    border-radius: 20px;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    box-shadow: 0 18px 44px rgba(17, 17, 17, 0.15);
+  }
+
+  .home-slide-products .home-product-strip img,
+  .home-slide-products .home-product-strip a:nth-child(n) img {
+    height: clamp(300px, 98vw, 440px);
+    aspect-ratio: auto;
+  }
+
+  .home-slide-products .home-product-strip strong {
+    min-height: 64px;
+    padding: 18px 20px;
+    font-size: 1.08rem;
+  }
+
+  /* La superficie dei punti mantiene lo stesso rapporto della casa: niente scarti o crop. */
+  .products-page .product-house-stage {
+    width: 100%;
+    min-height: 0;
+    aspect-ratio: 1576 / 998;
+  }
+
+  .products-page .product-house-render {
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .interactive-house-modal-view {
+    display: grid;
+    place-items: center;
+  }
+
+  .interactive-house-modal .product-house-stage {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1576 / 998;
+  }
+
+  .interactive-house-modal .product-house-render {
+    object-fit: cover;
+  }
 }
