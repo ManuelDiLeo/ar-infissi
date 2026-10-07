@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://arinfissieserramenti.it/sitemap.xml
