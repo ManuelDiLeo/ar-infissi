@@ -14,7 +14,7 @@ const isLikelyTrackpad = (event) => event.deltaMode === 0 && Math.abs(event.delt
 document.querySelectorAll(".site-footer").forEach((footer) => {
   const contactInfo = `
     <h2><span>AR</span> Infissi e Serramenti</h2>
-    <p>Certaldo</p>
+    <p>Via 2 Giugno 60A, Certaldo (FI)</p>
     <p>Cell. <a href="tel:+393389328320">+39 3389328320</a></p>
     <p>Email <a href="mailto:arinfissitoscana@gmail.com">arinfissitoscana@gmail.com</a></p>
   `;
@@ -842,17 +842,15 @@ if (quoteForm?.querySelector("[data-quote-step]")) {
     }
 
     if (quoteMessage) {
-      quoteMessage.textContent = "Richiesta preparata correttamente. Ti ricontatteremo per approfondire il progetto.";
+      quoteMessage.textContent = "Si apre il programma di posta: invia l’email per completare la richiesta. Eventuali foto vanno allegate manualmente. Se non si apre, scrivi ad arinfissitoscana@gmail.com.";
     }
 
     quoteForm.classList.add("is-submitted");
-    quoteForm.reset();
-    updateUrgentState();
-    setActiveQuoteStep(0);
-
-    if (quoteFileStatus) {
-      quoteFileStatus.textContent = "JPG o PNG, anche pi\u00f9 immagini";
-    }
+    const requestFields = new FormData(quoteForm);
+    const requestBody = Array.from(requestFields.entries())
+      .filter(([, value]) => typeof value === "string" && value.trim())
+      .map(([name, value]) => `${name}: ${value}`).join("\n");
+    window.location.href = `mailto:arinfissitoscana@gmail.com?subject=${encodeURIComponent("Richiesta preventivo AR Infissi e Serramenti")}&body=${encodeURIComponent(requestBody)}`;
   });
 }
 
@@ -1898,6 +1896,9 @@ if (workCarousel) {
     }
 
     activeWorkIndex = (nextIndex + slides.length) % slides.length;
+    slides.forEach((slide, index) => {
+      if (index !== activeWorkIndex) slide.querySelectorAll("video").forEach((video) => video.pause());
+    });
     slides.forEach((slide, index) => slide.classList.toggle("is-active", index === activeWorkIndex));
     thumbs.forEach((thumb, index) => thumb.classList.toggle("is-active", index === activeWorkIndex));
 
@@ -1915,7 +1916,11 @@ if (workCarousel) {
 
   const startWorkCarousel = () => {
     window.clearInterval(workTimer);
-    workTimer = window.setInterval(() => setWorkSlide(activeWorkIndex + 1), 4200);
+    workTimer = window.setInterval(() => {
+      const video = slides[activeWorkIndex]?.querySelector("video");
+      if (video && !video.paused && !video.ended) return;
+      setWorkSlide(activeWorkIndex + 1);
+    }, 4200);
   };
 
   thumbs.forEach((thumb, index) => {
@@ -1927,6 +1932,32 @@ if (workCarousel) {
 
   workCarousel.addEventListener("mouseenter", () => window.clearInterval(workTimer));
   workCarousel.addEventListener("mouseleave", startWorkCarousel);
+  workCarousel.querySelectorAll("[data-screen-media]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const slide = button.closest("[data-work-slide]");
+      const photo = slide.querySelector("[data-screen-photo]");
+      const video = slide.querySelector("[data-screen-video]");
+      const showVideo = button.dataset.screenMedia === "video";
+      video.pause();
+      photo.hidden = showVideo;
+      video.hidden = !showVideo;
+      if (!showVideo) {
+        photo.src = button.dataset.screenMedia;
+        photo.alt = button.dataset.screenMedia.endsWith("zanzariera%203.jpeg")
+          ? "Zanzariera installata su una porta finestra"
+          : "Vista frontale della zanzariera plissettata installata su una porta finestra";
+        if (backdrop) backdrop.src = photo.src;
+      }
+      slide.querySelectorAll("[data-screen-media]").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+      window.clearInterval(workTimer);
+    });
+  });
+  const workVideo = workCarousel.querySelector("[data-screen-video]");
+  if (workVideo) {
+    new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) workVideo.pause();
+    }).observe(workVideo);
+  }
   setWorkSlide(0);
   startWorkCarousel();
 }
